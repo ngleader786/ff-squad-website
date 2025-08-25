@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Next Generation | Tournaments</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #001a00, #003300);
+      color: #e6ffe6;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 20px;
+      color: #00ff66;
+      text-shadow: 0 0 15px #00ff66, 0 0 25px #00ffcc;
+    }
+
+    .controls {
+      max-width: 900px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    input, select {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+      font-size: 15px;
+      background: #002200;
+      color: #00ff66;
+      box-shadow: 0 0 10px rgba(0,255,100,0.2);
+      transition: 0.3s;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    input:focus, select:focus {
+      box-shadow: 0 0 15px #00ff66;
+    }
+
+    #loading {
+      text-align: center;
+      font-size: 18px;
+      color: #aaffaa;
+      margin-top: 20px;
+    }
+
+    .list {
+      max-width: 900px;
+      margin: auto;
+      width: 100%;
+      background: rgba(0, 40, 0, 0.6);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,255,100,0.3);
+    }
+
+    .header {
+      background: #004d00;
+      font-weight: bold;
+      font-size: 18px;
+      color: #00ff66;
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      padding: 12px;
+      border-bottom: 2px solid #00ff66;
+      text-align: center;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      padding: 12px;
+      border-bottom: 1px solid rgba(0,255,100,0.2);
+      transition: 0.3s;
+      text-align: center;
+    }
+
+    .row:hover {
+      background: rgba(0, 255, 100, 0.1);
+      transform: translateX(3px);
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .won {
+      background: #00ff66;
+      color: #001a00;
+      box-shadow: 0 0 10px #00ff66;
+    }
+
+    .lost {
+      background: #ff3333;
+      color: #fff;
+      box-shadow: 0 0 10px #ff3333;
+    }
+
+    .pending {
+      background: #ffcc00;
+      color: #000;
+      box-shadow: 0 0 10px #ffcc00;
+    }
+
+    /* ✅ Mobile Responsive Fix */
+    @media (max-width: 600px) {
+      .header, .row {
+        grid-template-columns: 1fr; /* har cheez ek ek row me aa jayegi */
+        text-align: left;
+      }
+      .header div, .row .cell {
+        justify-content: flex-start;
+        padding: 6px 0;
+      }
+      .row {
+        border-bottom: 2px solid rgba(0,255,100,0.3);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Next Generation Tournaments 🎮</h1>
+
+  <!-- Search & Filter -->
+  <div class="controls">
+    <input type="text" id="search" placeholder="🔍 Search by event name...">
+    <select id="filter">
+      <option value="all">All</option>
+      <option value="won">Won</option>
+      <option value="lost">Lost</option>
+      <option value="pending">Pending</option>
+    </select>
+  </div>
+
+  <div id="loading">⏳ Loading tournaments...</div>
+
+  <div class="list">
+    <div class="header">
+      <div>Date</div>
+      <div>Event</div>
+      <div>Result</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAf8hMnm2VWl8PPB9NmW9UH1LblqlkLTWw",
+      authDomain: "next-generation-a7adc.firebaseapp.com",
+      databaseURL: "https://next-generation-a7adc-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "next-generation-a7adc",
+      storageBucket: "next-generation-a7adc.appspot.com",
+      messagingSenderId: "539069462346",
+      appId: "1:539069462346:web:a81439a56eb711e17b73b3",
+      measurementId: "G-MKEF25Y1SS"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const rowsDiv = document.getElementById("rows");
+    const loadingDiv = document.getElementById("loading");
+    const searchInput = document.getElementById("search");
+    const filterSelect = document.getElementById("filter");
+
+    let tournaments = [];
+
+    db.ref("tournaments").on("value", snapshot => {
+      tournaments = [];
+      rowsDiv.innerHTML = "";
+      if (!snapshot.exists()) {
+        loadingDiv.innerHTML = "⚠ No tournaments found.";
+        return;
+      }
+      loadingDiv.style.display = "none";
+
+      snapshot.forEach(child => {
+        tournaments.push(child.val());
+      });
+
+      renderList();
+    });
+
+    function renderList() {
+      rowsDiv.innerHTML = "";
+      const searchValue = searchInput.value.toLowerCase();
+      const filterValue = filterSelect.value;
+
+      tournaments.forEach(data => {
+        let resultClass = statusClass(data.result);
+        let resultText = data.result || "Pending";
+
+        if (searchValue && !data.event.toLowerCase().includes(searchValue)) return;
+        if (filterValue !== "all" && resultClass !== filterValue) return;
+
+        const row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML = `
+          <div class="cell">📅 ${data.date || "N/A"}</div>
+          <div class="cell">${data.event || "Unnamed Event"}</div>
+          <div class="cell"><span class="badge ${resultClass}">${resultText}</span></div>
+        `;
+        rowsDiv.appendChild(row);
+      });
+
+      if (!rowsDiv.innerHTML) {
+        rowsDiv.innerHTML = `<div class="row"><div class="cell">❌ No results</div></div>`;
+      }
+    }
+
+    function statusClass(result) {
+      if (!result) return "pending";
+      if (result.toLowerCase().includes("won")) return "won";
+      if (result.toLowerCase().includes("lost")) return "lost";
+      if (result.toLowerCase().includes("pending")) return "pending";
+      return "pending";
+    }
+
+    searchInput.addEventListener("input", renderList);
+    filterSelect.addEventListener("change", renderList);
+  </script>
+</body>
+</html>

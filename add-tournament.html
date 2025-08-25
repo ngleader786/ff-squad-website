@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Tournament | Next Generation</title>
+  <style>
+    body { background:#0d0d0d; color:#fff; font-family:Arial, sans-serif; padding:20px; }
+    h1 { color:#ff0055; text-align:center; }
+    .form-box {
+      background:#1a1a1a; padding:20px; border-radius:10px;
+      width:100%; max-width:400px; margin:30px auto; box-shadow:0 0 15px rgba(255,0,85,0.4);
+    }
+    label { display:block; margin:10px 0 5px; }
+    input, select {
+      width:100%; padding:10px; border-radius:6px; border:none; margin-bottom:15px;
+    }
+    button {
+      padding:8px 14px; border:none; border-radius:6px;
+      background:#ff0055; color:#fff; font-weight:bold; cursor:pointer;
+      transition:0.3s;
+    }
+    button:hover { background:#e6004c; }
+    .msg { margin-top:10px; text-align:center; font-weight:bold; }
+    .card {
+      background:#1a1a1a; border:1px solid #ff0055;
+      padding:15px; border-radius:10px; margin:15px 0;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .info { max-width:75%; }
+    .date { font-size:14px; color:#ccc; }
+    .event { font-size:18px; font-weight:bold; margin:5px 0; }
+    .result { font-size:15px; color:#00eaff; }
+    .del-btn {
+      background:#ff2222; padding:8px 12px; border-radius:6px;
+      cursor:pointer; border:none; color:#fff; font-weight:bold;
+    }
+    .del-btn:hover { background:#cc0000; }
+  </style>
+</head>
+<body>
+  <h1>➕ Add Tournament</h1>
+  <div class="form-box">
+    <label>Date:</label>
+    <input type="date" id="date">
+    
+    <label>Event:</label>
+    <input type="text" id="event" placeholder="Tournament Name / Scrim">
+    
+    <label>Result:</label>
+    <select id="result">
+      <option>Pending</option>
+      <option>Coming Soon</option>
+      <option>Won</option>
+      <option>Lost</option>
+    </select>
+
+    <button onclick="addTournament()">Add Tournament</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <h2 style="text-align:center; color:#ff0055;">🗂 Added Tournaments</h2>
+  <div id="list"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAf8hMnm2VWl8PPB9NmW9UH1LblqlkLTWw",
+      authDomain: "next-generation-a7adc.firebaseapp.com",
+      databaseURL: "https://next-generation-a7adc-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "next-generation-a7adc",
+      storageBucket: "next-generation-a7adc.appspot.com",
+      messagingSenderId: "539069462346",
+      appId: "1:539069462346:web:a81439a56eb711e17b73b3",
+      measurementId: "G-MKEF25Y1SS"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function addTournament() {
+      const date = document.getElementById("date").value;
+      const event = document.getElementById("event").value;
+      const result = document.getElementById("result").value;
+
+      if (!date || !event) {
+        document.getElementById("msg").innerHTML = "⚠ Please fill all fields!";
+        return;
+      }
+
+      db.ref("tournaments").push({
+        date: date,
+        event: event,
+        result: result
+      });
+
+      document.getElementById("msg").innerHTML = "✅ Tournament Added!";
+      document.getElementById("date").value = "";
+      document.getElementById("event").value = "";
+    }
+
+    function deleteTournament(id) {
+      db.ref("tournaments/" + id).remove();
+    }
+
+    const listDiv = document.getElementById("list");
+
+    db.ref("tournaments").on("value", snapshot => {
+      listDiv.innerHTML = "";
+      snapshot.forEach(child => {
+        const data = child.val();
+        const id = child.key;
+
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <div class="info">
+            <div class="date">📅 ${data.date}</div>
+            <div class="event">${data.event}</div>
+            <div class="result">Result: ${data.result}</div>
+          </div>
+          <button class="del-btn" onclick="deleteTournament('${id}')">🗑 Delete</button>
+        `;
+        listDiv.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>

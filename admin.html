@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Data | Next Generations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+      color: #fff;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00ff88;
+      margin-bottom: 30px;
+    }
+    .section {
+      background: #111;
+      padding: 20px;
+      border-radius: 15px;
+      max-width: 600px;
+      margin: 30px auto;
+      box-shadow: 0 0 20px #00ff88;
+    }
+    .section h2 {
+      color: #00ffaa;
+      margin-bottom: 15px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 2px solid #00ff88;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    button {
+      background: #00ff88;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #33ffaa;
+    }
+    .list {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .item {
+      background: #222;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item span {
+      flex: 1;
+    }
+    .delete {
+      background: #ff4444;
+      color: white;
+    }
+    .delete:hover {
+      background: #ff6666;
+    }
+  </style>
+</head>
+<body>
+  <h1>⚡ Manage Content</h1>
+
+  <!-- Formations -->
+  <div class="section">
+    <h2>📌 Formations</h2>
+    <input id="formTitle" placeholder="Title" required>
+    <input id="formShort" placeholder="Short Name (e.g. 2-2 Split)">
+    <textarea id="formDesc" placeholder="Description"></textarea>
+    <input type="number" id="formOrder" placeholder="Order (1,2,3)" required>
+    <button onclick="addData('formations')">Add Formation</button>
+    <div class="list" id="formationsList"></div>
+  </div>
+
+  <!-- Strategies -->
+  <div class="section">
+    <h2>🎯 Strategies</h2>
+    <input id="stratTitle" placeholder="Title" required>
+    <textarea id="stratDesc" placeholder="Description"></textarea>
+    <input type="number" id="stratOrder" placeholder="Order (1,2,3)" required>
+    <button onclick="addData('strategies')">Add Strategy</button>
+    <div class="list" id="strategiesList"></div>
+  </div>
+
+  <!-- Tips -->
+  <div class="section">
+    <h2>🏆 Tournament Tips</h2>
+    <input id="tipTitle" placeholder="Title" required>
+    <textarea id="tipDesc" placeholder="Description"></textarea>
+    <input type="number" id="tipOrder" placeholder="Order (1,2,3)" required>
+    <button onclick="addData('tips')">Add Tip</button>
+    <div class="list" id="tipsList"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAf8hMnm2VWl8PPB9NmW9UH1LblqlkLTWw",
+      authDomain: "next-generation-a7adc.firebaseapp.com",
+      projectId: "next-generation-a7adc",
+      storageBucket: "next-generation-a7adc.appspot.com",
+      messagingSenderId: "539069462346",
+      appId: "1:539069462346:web:a81439a56eb711e17b73b3",
+      measurementId: "G-MKEF25Y1SS"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Add Data Function
+    async function addData(type) {
+      let title, description, short = "", order;
+
+      if(type === "formations") {
+        title = document.getElementById("formTitle").value;
+        short = document.getElementById("formShort").value;
+        description = document.getElementById("formDesc").value;
+        order = parseInt(document.getElementById("formOrder").value);
+      } else if(type === "strategies") {
+        title = document.getElementById("stratTitle").value;
+        description = document.getElementById("stratDesc").value;
+        order = parseInt(document.getElementById("stratOrder").value);
+      } else {
+        title = document.getElementById("tipTitle").value;
+        description = document.getElementById("tipDesc").value;
+        order = parseInt(document.getElementById("tipOrder").value);
+      }
+
+      if(!title || !description || !order) {
+        alert("⚠️ Please fill all required fields");
+        return;
+      }
+
+      await db.collection(type).add({ title, short, description, order });
+      alert("✅ Added to " + type);
+    }
+
+    // Load Data
+    function loadData(type, containerId) {
+      db.collection(type).orderBy("order").onSnapshot(snapshot => {
+        const box = document.getElementById(containerId);
+        box.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <span><b>${data.title}</b> - ${data.description}</span>
+            <button class="delete" onclick="deleteData('${type}','${doc.id}')">Delete</button>
+          `;
+          box.appendChild(div);
+        });
+      });
+    }
+
+    // Delete Data
+    async function deleteData(type, id) {
+      if(confirm("Are you sure to delete?")) {
+        await db.collection(type).doc(id).delete();
+      }
+    }
+
+    // Auto Load
+    loadData("formations", "formationsList");
+    loadData("strategies", "strategiesList");
+    loadData("tips", "tipsList");
+  </script>
+</body>
+</html>

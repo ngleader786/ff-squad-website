@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Strategies | Next Generations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400;600&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+      color: #fff;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    .password-box {
+      background: #111;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 25px #00ff88;
+      width: 320px;
+      text-align: center;
+      animation: fadeIn 0.9s ease-in-out;
+    }
+
+    .password-box h2 {
+      margin-bottom: 20px;
+      color: #00ff88;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .input-wrapper input {
+      padding: 12px 100px 12px 15px;
+      width: 100%;
+      border-radius: 12px;
+      border: 2px solid #00ff88;
+      margin-bottom: 15px;
+      font-size: 1em;
+      background: #111;
+      color: #fff;
+      box-shadow: 0 0 20px #00ff88;
+      box-sizing: border-box;
+    }
+
+    .show-pass-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #00ff88;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: 0.3s;
+    }
+
+    .show-pass-btn:hover { background: #33ffaa; }
+
+    .unlock-btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      background: #00ff88;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    .unlock-btn:hover { background: #33ffaa; }
+
+    .error-msg {
+      color: #ff4444;
+      margin-top: 12px;
+      display: none;
+      font-weight: bold;
+    }
+
+    .strategies-container {
+      display: none;
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: auto;
+      text-align: left;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1.section-title {
+      color: #00ff88;
+      text-align: center;
+      margin: 30px 0 20px;
+      font-family: 'Orbitron', sans-serif;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .box {
+      background: #1a1a1a;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 15px;
+      border: 2px solid #00ff88;
+      box-shadow: 0 0 20px #00ff88;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    .formation { margin-bottom: 15px; }
+    .formation h3 { margin: 0; color: #00ffaa; }
+    .formation small { color: #bbb; font-style: italic; }
+    .formation p { margin: 8px 0 0; }
+
+    footer {
+      padding: 20px;
+      background: #111;
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    footer a { color: #00ff88; margin: 0 10px; text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .strategies-container { padding: 20px 15px; }
+      .box { padding: 15px; }
+      .password-box { width: 90%; padding: 20px; }
+      h1.section-title { font-size: 1.4em; }
+      .unlock-btn, .show-pass-btn { font-size: 0.85em; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Password Overlay -->
+  <div class="overlay" id="passwordOverlay">
+    <div class="password-box">
+      <h2>🔒 Enter Secret Password</h2>
+      <div class="input-wrapper">
+        <input type="password" id="passwordInput" placeholder="Type password...">
+        <button class="show-pass-btn" onclick="togglePassword()">Show</button>
+      </div>
+      <button class="unlock-btn" onclick="checkPassword()">Next</button>
+      <div class="error-msg" id="errorMsg">❌ Wrong password! Try again.</div>
+    </div>
+  </div>
+
+  <!-- Strategies Content -->
+  <div class="strategies-container" id="strategiesContent">
+    <h1 class="section-title">🛡️ Formations</h1>
+    <div class="box" id="formationsBox"><p>Loading formations...</p></div>
+
+    <h1 class="section-title">🎯 Strategies</h1>
+    <div class="box" id="strategiesBox"><p>Loading strategies...</p></div>
+
+    <h1 class="section-title">🏆 Tournament Tips</h1>
+    <div class="box" id="tipsBox"><p>Loading tips...</p></div>
+  </div>
+
+  <footer><p>Back to <a href="index.html">Home</a></p></footer>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ✅ Firebase Config (Realtime DB URL removed)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAf8hMnm2VWl8PPB9NmW9UH1LblqlkLTWw",
+      authDomain: "next-generation-a7adc.firebaseapp.com",
+      projectId: "next-generation-a7adc",
+      storageBucket: "next-generation-a7adc.firebasestorage.app",
+      messagingSenderId: "539069462346",
+      appId: "1:539069462346:web:a81439a56eb711e17b73b3",
+      measurementId: "G-MKEF25Y1SS"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ✅ Load Formations
+    const formationsBox = document.getElementById('formationsBox');
+    db.collection('formations').orderBy('order', 'asc').onSnapshot(snapshot => {
+      if(snapshot.empty){ formationsBox.innerHTML = "<p>No formations added yet.</p>"; return; }
+      formationsBox.innerHTML = '';
+      snapshot.forEach(doc => {
+        const f = doc.data();
+        const div = document.createElement('div');
+        div.className = 'formation';
+        div.innerHTML = `
+          <h3>${escapeHtml(f.title || 'Untitled')} <small>(${f.short || ''})</small></h3>
+          <p>${escapeHtml(f.description || '')}</p>
+        `;
+        formationsBox.appendChild(div);
+      });
+    });
+
+    // ✅ Load Strategies
+    const strategiesBox = document.getElementById('strategiesBox');
+    db.collection('strategies').orderBy('order', 'asc').onSnapshot(snapshot => {
+      if(snapshot.empty){ strategiesBox.innerHTML = "<p>No strategies added yet.</p>"; return; }
+      strategiesBox.innerHTML = '';
+      snapshot.forEach(doc => {
+        const s = doc.data();
+        const p = document.createElement('p');
+        p.textContent = s.description || '';
+        strategiesBox.appendChild(p);
+      });
+    });
+
+    // ✅ Load Tips
+    const tipsBox = document.getElementById('tipsBox');
+    db.collection('tips').orderBy('order', 'asc').onSnapshot(snapshot => {
+      if(snapshot.empty){ tipsBox.innerHTML = "<p>No tips added yet.</p>"; return; }
+      tipsBox.innerHTML = '';
+      snapshot.forEach(doc => {
+        const t = doc.data();
+        const p = document.createElement('p');
+        p.textContent = "✅ " + (t.description || '');
+        tipsBox.appendChild(p);
+      });
+    });
+
+    // Escape HTML
+    function escapeHtml(s){
+      if(!s) return '';
+      return s.replaceAll('&','&amp;')
+              .replaceAll('<','&lt;')
+              .replaceAll('>','&gt;')
+              .replaceAll('"','&quot;')
+              .replaceAll("'",'&#039;');
+    }
+
+    // Password logic
+    const correctPassword = "ng12"; 
+    function checkPassword() {
+      const input = document.getElementById('passwordInput').value;
+      const errorMsg = document.getElementById('errorMsg');
+      if(input === correctPassword){
+        document.getElementById('passwordOverlay').style.display = 'none';
+        document.getElementById('strategiesContent').style.display = 'block';
+      } else {
+        errorMsg.style.display = 'block';
+      }
+    }
+    function togglePassword(){
+      const pwd = document.getElementById('passwordInput');
+      const btn = document.querySelector('.show-pass-btn');
+      if(pwd.type === 'password'){ pwd.type = 'text'; btn.textContent = 'Hide'; }
+      else { pwd.type = 'password'; btn.textContent = 'Show'; }
+    }
+  </script>
+</body>
+</html>

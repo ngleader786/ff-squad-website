@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Maps | Team Next Generations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@400;600&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+      color: #fff;
+      text-align: center;
+    }
+
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .password-box {
+      background: #111;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 25px #ff0055;
+      width: 320px;
+      text-align: center;
+    }
+
+    .password-box h2 {
+      margin-bottom: 20px;
+      color: #ffae00;
+    }
+
+    .password-box input {
+      padding: 12px 15px;
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+
+    .show-pass-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #ffae00;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: 0.3s;
+    }
+
+    .show-pass-btn:hover {
+      background: #ffaa00;
+    }
+
+    .password-box button.unlock-btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      background: #ff0055;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    .password-box button.unlock-btn:hover {
+      background: #ff3366;
+    }
+
+    .error-msg {
+      color: #ff4444;
+      margin-top: 12px;
+      display: none;
+      font-weight: bold;
+    }
+
+    /* Maps Container */
+    .maps-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      padding: 40px;
+      display: none; /* Hidden until password correct */
+    }
+
+    .map-card {
+      background: #111;
+      border-radius: 12px;
+      width: 300px;
+      overflow: hidden;
+      box-shadow: 0 0 20px #ff0055;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+    .map-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 40px #ffae00;
+    }
+    .map-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      cursor: zoom-in;
+    }
+    .map-info {
+      padding: 20px;
+      text-align: left;
+    }
+    .map-info h2 {
+      color: #ffae00;
+      margin-bottom: 10px;
+    }
+    .map-info ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .map-info ul li {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .map-info ul li img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 2px solid #ffae00;
+      cursor: zoom-in;
+    }
+
+    footer {
+      padding: 20px;
+      background: #111;
+      margin-top: 40px;
+    }
+    footer a {
+      color: #ffae00;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+
+    /* Image Viewer Modal */
+    .img-modal {
+      display: none;
+      position: fixed;
+      z-index: 200;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      justify-content: center;
+      align-items: center;
+    }
+    .img-modal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 12px;
+      box-shadow: 0 0 25px #ffae00;
+    }
+    .img-modal .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 2em;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .img-modal .close-btn:hover {
+      color: #ff0055;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Password Overlay -->
+  <div class="overlay" id="passwordOverlay">
+    <div class="password-box">
+      <h2>🔒 Enter Secret Password</h2>
+      <div style="position: relative;">
+        <input type="password" id="passwordInput" placeholder="Type here...">
+        <button class="show-pass-btn" onclick="togglePassword()">Show</button>
+      </div>
+      <button class="unlock-btn" onclick="checkPassword()">Unlock</button>
+      <div class="error-msg" id="errorMsg">❌ Wrong password! Try again.</div>
+    </div>
+  </div>
+
+  <!-- Maps Content -->
+  <div class="maps-container" id="mapsContent">
+
+    <!-- Bermuda -->
+    <div class="map-card">
+      <img src="bermuda1.jpeg" alt="Bermuda" onclick="openImage(this.src)">
+      <div class="map-info">
+        <h2>Bermuda</h2>
+        <ul>
+          <li><img src="mill.jpg" alt="Mill" onclick="openImage(this.src)"> Mill</li>
+          <li><img src="rimnam.jpg" alt="Rim Nam" onclick="openImage(this.src)"> Rim Nam Village</li>
+          <li><img src="capetown.jpg" alt="Cape Town" onclick="openImage(this.src)"> Cape Town</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Kalahari -->
+    <div class="map-card">
+      <img src="kalhari.jpeg" alt="Kalahari" onclick="openImage(this.src)">
+      <div class="map-info">
+        <h2>Kalahari</h2>
+        <ul>
+          <li><img src="confinement.jpeg" alt="Confinement" onclick="openImage(this.src)"> Confinement</li>
+          <li><img src="maze.jpg" alt="Maze" onclick="openImage(this.src)"> The Maze</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Purgatory -->
+    <div class="map-card">
+      <img src="purgatory.jpeg" alt="Purgatory" onclick="openImage(this.src)">
+      <div class="map-info">
+        <h2>Purgatory</h2>
+        <ul>
+          <li><img src="central.jpg" alt="Central" onclick="openImage(this.src)"> Central</li>
+          <li><img src="forge.jpg" alt="Forge" onclick="openImage(this.src)"> Forge</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Alpine -->
+    <div class="map-card">
+      <img src="alpine.jpeg" alt="Alpine" onclick="openImage(this.src)">
+      <div class="map-info">
+        <h2>Alpine</h2>
+        <ul>
+          <li><img src="forestred.jpg" alt="Forest Red" onclick="openImage(this.src)"> Forest Red</li>
+          <li><img src="garrison.jpg" alt="Garrison" onclick="openImage(this.src)"> Garrison</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Nexterra -->
+    <div class="map-card">
+      <img src="nexterra.jpeg" alt="Nexterra" onclick="openImage(this.src)">
+      <div class="map-info">
+        <h2>Nexterra</h2>
+        <ul>
+          <li><img src="mudsite.jpg" alt="Mud Site" onclick="openImage(this.src)"> Mud Site</li>
+          <li><img src="mortar.jpg" alt="Mortar Ruins" onclick="openImage(this.src)"> Mortar Ruins</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>Back to <a href="index.html">Home</a></p>
+  </footer>
+
+  <!-- Image Viewer Modal -->
+  <div class="img-modal" id="imgModal">
+    <span class="close-btn" onclick="closeImage()">&times;</span>
+    <img id="modalImage" src="">
+  </div>
+
+  <script>
+    const correctPassword = "ng12"; // set your password here
+
+    function checkPassword() {
+      const input = document.getElementById('passwordInput').value;
+      const errorMsg = document.getElementById('errorMsg');
+      if(input === correctPassword){
+        document.getElementById('passwordOverlay').style.display = 'none';
+        document.getElementById('mapsContent').style.display = 'flex';
+      } else {
+        errorMsg.style.display = 'block';
+      }
+    }
+
+    function togglePassword(){
+      const pwd = document.getElementById('passwordInput');
+      const btn = document.querySelector('.show-pass-btn');
+      if(pwd.type === 'password'){
+        pwd.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        pwd.type = 'password';
+        btn.textContent = 'Show';
+      }
+    }
+
+    // Fullscreen Image Viewer
+    function openImage(src){
+      document.getElementById('modalImage').src = src;
+      document.getElementById('imgModal').style.display = 'flex';
+    }
+    function closeImage(){
+      document.getElementById('imgModal').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>
